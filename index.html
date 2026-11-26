@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Showreel 2026 | Sindre Kolstad Tvete</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #0e0f11; color: #e9e9ea; }
+  body { font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 28px 16px 40px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0; letter-spacing: 0.01em; }
+  .sub { color: #9a9ca3; margin: 2px 0 18px; font-size: 15px; }
+  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 6px; overflow: hidden; }
+  .frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  nav { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 15px; }
+  nav a { color: #e9e9ea; text-decoration: none; border-bottom: 1px solid #55575e; padding-bottom: 1px; }
+  nav a:hover, nav a:focus-visible { border-bottom-color: #e9e9ea; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Sindre Kolstad Tvete</h1>
+  <div class="sub">Showreel 2026</div>
+  <div class="frame">
+    <iframe id="reel" src="https://player.vimeo.com/video/1179261601?dnt=1&amp;title=0&amp;byline=0&amp;portrait=0"
+            title="Showreel 2026" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+  </div>
+  <nav>
+    <a href="https://www.linkedin.com/in/sindre-tvete" data-log="klikket LinkedIn">LinkedIn</a>
+    <a href="https://vimeo.com/1179261601" data-log="klikket Vimeo-lenken">Vimeo</a>
+  </nav>
+</main>
+
+<script src="https://player.vimeo.com/api/player.js"></script>
+<script>
+(function () {
+  // Where events go. Swap this one function to change log service.
+  var TOPIC = 'rl-fc550decfebbb54b';
+  var ROOT = 'reel';
+
+  // The code is the folder name in the address: /reel/kda/ gives "kda".
+  var parts = location.pathname.split('/').filter(function (p) { return p && p !== 'index.html'; });
+  var last = parts.length ? parts[parts.length - 1] : '';
+  var code = (last && last !== ROOT ? last : 'direkte').replace(/[^a-z0-9-]/gi, '').slice(0, 40) || 'direkte';
+
+  // Add #nolog to the address to look at the page without logging anything.
+  var quiet = location.hash === '#nolog';
+
+  var sent = {};
+  function log(msg) {
+    if (quiet || sent[msg]) return;
+    sent[msg] = true;
+    var url = 'https://ntfy.sh/' + TOPIC + '?title=' + encodeURIComponent(code);
+    var body = code + ': ' + msg;
+    try { if (navigator.sendBeacon && navigator.sendBeacon(url, body)) return; } catch (e) {}
+    try { fetch(url, { method: 'POST', body: body, keepalive: true, mode: 'no-cors' }); } catch (e) {}
+  }
+
+  log('åpnet siden');
+
+  document.querySelectorAll('a[data-log]').forEach(function (a) {
+    a.addEventListener('click', function () { log(a.getAttribute('data-log')); });
+  });
+
+  if (window.Vimeo) {
+    var player = new Vimeo.Player(document.getElementById('reel'));
+    var watched = 0, lastT = null;
+    player.on('play', function () { log('startet reelen'); });
+    player.on('seeked', function () { lastT = null; });
+    player.on('timeupdate', function (d) {
+      // Count seconds actually played, so skipping ahead does not count as watching.
+      if (lastT !== null) {
+        var step = d.seconds - lastT;
+        if (step > 0 && step < 1.5) watched += step;
+      }
+      lastT = d.seconds;
+      if (!d.duration) return;
+      var pct = watched / d.duration * 100;
+      [25, 50, 75, 90].forEach(function (t) { if (pct >= t) log('har sett ' + t + ' % av reelen'); });
+    });
+    player.on('ended', function () { log('kom til slutten av reelen'); });
+  }
+})();
+</script>
+</body>
+</html>
